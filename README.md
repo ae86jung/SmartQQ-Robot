@@ -96,7 +96,7 @@ https.get(option,  (res) => {
 * 带上refer`http://s.web2.qq.com/proxy.html?v=20130916001&callback=1&id=1`和第一步获取的cookie去访问第一步获取到url地址
 * 请求得到的状态是302，我们可以从返回的头部中获取到服务器返回的cookie，其中cookie中有ptwebqq这个参数（但我测试了几个账号，也没返回这个值，没返回没关系，置为空就行）
 ```javascript
-Cookie:RK=NPdvhnBbXp; pgv_pvi=; tvfe_boss_uuid=; pac_uid=; eas_sid=; pgv_pvid=; o_cookie=; pgv_si=; p_uin=; p_skey=; pt4_token=; pt2gguin=; uin=; skey=; ptisp=; ptcz=
+Cookie:RK=; pgv_pvi=; tvfe_boss_uuid=; pac_uid=; eas_sid=; pgv_pvid=; o_cookie=; pgv_si=; p_uin=; p_skey=; pt4_token=; pt2gguin=; uin=; skey=; ptisp=; ptcz=
 ```
 * 这里有个需要注意的地方，因为cookie中带有DOMAIN，PATH，EXPIRES等无用cookie，需要将其去除掉，然后拼接为cookie字符串
 ```javascript
@@ -112,4 +112,7 @@ const handleCookie = function (cookieJson) {
 	return str;
 }
 ```
-* 记录处理后的cookie，完成第二步，接下来是第三步了
+* 记录ptwebqq和处理后的cookie，完成第二步，接下来是第三步了
+
+**3.第三步 获取vfwebqq**
+未完，待续
