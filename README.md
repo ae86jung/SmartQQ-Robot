@@ -92,7 +92,7 @@ https.get(option,  (res) => {
 ```
 * 扫描成功后，服务器会返回一个url地址和用户昵称，把返回的url地址保存下载。当然，cookie也要保存下来，第一步终于完成了，然后进行第二步
 
-** 2.第二步 获取ptwebqq
+** 2.第二步 获取ptwebqq **
 * 带上refer`http://s.web2.qq.com/proxy.html?v=20130916001&callback=1&id=1`和第一步获取的cookie去访问第一步获取到url地址
 * 请求得到的状态是302，我们可以从返回的头部中获取到服务器返回的cookie，其中cookie中有ptwebqq这个参数（但我测试了几个账号，也没返回这个值，没返回没关系，置为空就行）
 * 这里有个需要注意的地方，因为cookie中带有DOMAIN，PATH，EXPIRES等无用cookie，需要将其去除掉，然后拼接为cookie字符串
