@@ -115,4 +115,48 @@ const handleCookie = function (cookieJson) {
 * 记录ptwebqq和处理后的cookie，完成第二步，接下来是第三步了
 
 **3.第三步 获取vfwebqq**
-未完，待续
+* 需要用到的参数：第二步处理后的cookie和ptwebqq
+* 带上refer`http://s.web2.qq.com/proxy.html?v=20130916001&callback=1&id=1`和cookie 访问`http://s.web2.qq.com/api/getvfwebqq?ptwebqq=${ptwebqq}&clientid=53999199&psessionid=&t=0.1`
+* 其中变量ptwebqq是第二步获取到的
+```javascript
+var url = `/api/getvfwebqq?ptwebqq=${ptwebqq}&clientid=53999199&psessionid=&t=0.1`;
+console.log(url);
+const options = {
+	hostname: 's.web2.qq.com',
+	path: url,
+	method: 'GET',
+	headers: {
+		'content-type': 'application/json;charset=utf-8',
+		'referer':'http://s.web2.qq.com/proxy.html?v=20130916001&callback=1&id=1',
+		'cookie': cookies
+	}
+};
+http.request(options, (res) => {
+	console.log('STATUS:'+res.statusCode);
+	console.log('HEADERS:'+JSON.stringify(res.headers));
+	res.on('data', (d) => {
+		console.log("----------vfwebqq-----------");
+		const resJson = JSON.parse(d.toString());
+		console.log(resJson);
+		var vfwebqq = '';
+		if(parseInt(resJson.retcode) === 0){
+			vfwebqq = resJson.result.vfwebqq;
+		}
+		resolve(vfwebqq)
+
+	})
+
+}).on('error', (e) => {
+	console.error(e);
+	reject('错误');
+}).end();
+```
+* 如果成功，返回一个json，如下
+```javascript
+{"retcode":0,"result":{"vfwebqq":"7a9d56e1ce7c1fd526d7b478cfc862ee50559999dfd4c525557673a0ad0021f773ae199e32b07522"}}
+```
+* 取出其中的vfwebqq，保存下来，第三步完成
+
+**4.第四步 获取psessionid和uin**
+
+* 未完，待续
