@@ -52,6 +52,30 @@ function GetToken(t) {
 		e += (e << 5) + t.charCodeAt(i);
 	return 2147483647 & e
 }
+
+const option={
+	hostname:'ssl.ptlogin2.qq.com',
+	path:`/ptqrlogin?u1=http%3A%2F%2Fw.qq.com%2Fproxy.html&ptqrtoken=${qstrtoken}&ptredirect=0&h=1&t=1&g=1&from_ui=1&ptlang=2052&action=0-0-1502764648924&js_ver=10227&js_type=1&login_sig=8XMAlaR-gznVLyggu6Rn7cFYTephrrEUh3lJ*E8ycUJqtpmqfYZ*fQ186QtIGBQF&pt_uistyle=40&aid=501004106&daid=164&mibao_css=m_webqq&`,
+	headers:{
+		'accept':'*/*',
+		'accept-Encoding':'gzip, deflate', 
+		'accept-Language':'zh-CN,zh;q=0.8',
+		'connection':'keep-alive',
+		'host':'ssl.ptlogin2.qq.com',
+		'user-agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 UBrowser/6.1.3228.1 Safari/537.36',
+		'referer':'https://xui.ptlogin2.qq.com/cgi-bin/xlogin?daid=164&target=self&style=40&mibao_css=m_webqq&appid=501004106&enable_qlogin=0&no_verifyimg=1&s_url=http%3A%2F%2Fw.qq.com%2Fproxy.html&f_url=loginerroralert&strong_login=1&login_state=10&t=20131024001',
+		'cookie': cookies
+	}
+};
+https.get(option,  (res) => {
+	res.on('data', (d) => {
+		resolve(d.toString());
+	})
+})
+.on('error', (e) => {
+	console.error(e);
+	reject('错误');
+});
 ```
 * 二维码可能返回的4种状态如下：
 ```javascript
@@ -66,3 +90,4 @@ function GetToken(t) {
 ```javascript
 	ptuiCB('0','0','返回的url地址','0','登录成功！', 'QQ昵称');
 ```
+* 扫描成功后，服务器会返回一个url地址和用户昵称，把返回的url地址保存下载。当然，cookie也要保存下来，第一步终于完成了，然后进行第二步
