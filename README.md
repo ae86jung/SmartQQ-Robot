@@ -157,6 +157,129 @@ http.request(options, (res) => {
 ```
 * 取出其中的vfwebqq，保存下来，第三步完成
 
-**4.第四步 获取psessionid和uin**
+**4.第四步 获取psessionid和uin（二次登陆）**
 
-* 未完，待续
+* 需要用到的参数：第二步获取到的`ptwebqq`、固定为53999199的`clientid`、置为空的`psessionid`、设置为"online"的`status`
+* 注意这里的提交方式不是普通的get和post，需要用到表单post提交方式，携带上第二步保存的cookie
+* 请求地址：`http://d1.web2.qq.com/channel/login2`， refer： `http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2`
+```javascript
+const options = "r="+JSON.stringify({
+		"ptwebqq":ptwebqq || "",
+		"clientid": 53999199,
+		"psessionid": "",
+		"status": "online"
+	});
+const urlCode = encodeURI(options);
+request.post({
+		url:'http://d1.web2.qq.com/channel/login2',
+		form: urlCode,
+		headers: {
+			'Accept':'*/*',
+			'Accept-Language':'zh-CN,zh;q=0.8',
+			'referer': 'http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2',
+			'cookie': cookies,
+			'Host':'d1.web2.qq.com',
+			'Origin':'http://d1.web2.qq.com',
+			'Proxy-Connection':'keep-alive'
+		}
+	},
+	function(err,httpResponse,body){
+		//...省略处理过程...
+	})
+```
+* 正确返回的结果如下：
+```
+{"result":{"cip":23600812,"f":0,"index":1075,"port":47450,"psessionid":"8368046764001d636f6e6e7365727665725f77656271714031302e3133332e34312e383400001ad00000066b026e040015808a206d0000000a406172314338344a69526d0000002859185d94e66218548d1ecb1a12513c86126b3afb97a3c2955b1070324790733ddb059ab166de6857","status":"online","uin":xxx,"user_state":0,"vfwebqq":"59185d94e66218548d1ecb1a12513c86126b3afb97a3c2955b1070324790733ddb059ab166de6857"},"retcode":0}
+```
+* 这里也返回一个`vfwebqq`，但是这个`vfwebqq`没用
+* 处理json串取到pessionid和uin
+
+**5.第五步 轮训收信息**
+* 请求方式：Post
+* url：http://d1.web2.qq.com/channel/poll2
+* referer：http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2
+* 请求参数只有一个r，值是一个 JSON，内容为：
+```
+{
+    "ptwebqq": ptwebqq,
+    "clientid": 53999199,
+    "psessionid": psessionid,
+    "key": ""
+}
+```
+* `ptwebqq`和`psessionid`都是登录后获得的参数。
+* 请求成功后返回的内容为:
+```
+{
+    "result": [
+        {
+            "poll_type": "message",
+            "value": {
+                "content": [
+                    [
+                        "font",
+                        {
+                            "color": "000000",
+                            "name": "微软雅黑",
+                            "size": 10,
+                            "style": [
+                                0,
+                                0,
+                                0
+                            ]
+                        }
+                    ],
+                    "好啊"
+                ],
+                "from_uin": 3785096088,
+                "msg_id": 25477,
+                "msg_type": 0,
+                "time": 1450686775,
+                "to_uin": 931996776
+            }
+        }
+    ],
+    "retcode": 0
+}
+```
+* poll_type为message表示这是个好友消息。
+  from_uin是用户的编号，可以用于发消息，但不是 qq号。
+  to_uin是接受者的编号，同时也是 qq号。
+  time为消息的发送时间，content [0]为字体，后面为消息的内容。其他字段暂时不知道有何意义。
+* 如果为群消息，返回内容为：
+```javacript
+{
+    "result": [
+        {
+            "poll_type": "group_message",
+            "value": {
+                "content": [
+                    [
+                        "font",
+                        {
+                            "color": "000000",
+                            "name": "微软雅黑",
+                            "size": 10,
+                            "style": [
+                                0,
+                                0,
+                                0
+                            ]
+                        }
+                    ],
+                    "好啊",
+                ],
+                "from_uin": 2323421101,
+                "group_code": 2323421101,
+                "msg_id": 50873,
+                "msg_type": 0,
+                "send_uin": 3680220215,
+                "time": 1450687625,
+                "to_uin": 931996776
+            }
+        }
+    ],
+    "retcode": 0
+}
+```
+* 其中poll_type会变成group_message，group_code和from_uin都为群的编号，可以用于发群消息，但不是群号。send_uin为发信息的用户的编号。其他的字段和上面的相同。
