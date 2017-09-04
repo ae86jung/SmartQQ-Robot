@@ -246,6 +246,7 @@ request.post({
   from_uin是用户的编号，可以用于发消息，但不是 qq号。
   to_uin是接受者的编号，同时也是 qq号。
   time为消息的发送时间，content [0]为字体，后面为消息的内容。其他字段暂时不知道有何意义。
+* -------------------------------我是分界线-----------------------------------
 * 如果为群消息，返回内容为：
 ```javacript
 {
@@ -283,3 +284,110 @@ request.post({
 }
 ```
 * 其中poll_type会变成group_message，group_code和from_uin都为群的编号，可以用于发群消息，但不是群号。send_uin为发信息的用户的编号。其他的字段和上面的相同。
+
+* -------------------------------我是分界线-----------------------------------
+
+* 如果是讨论组消息，poll_type会变为discu_message，did为讨论组的编号，其他的字段都和群消息相同。
+```
+{
+    "result": [
+        {
+            "poll_type": "discu_message",
+            "value": {
+                "content": [
+                    [
+                        "font",
+                        {
+                            "color": "000000",
+                            "name": "微软雅黑",
+                            "size": 10,
+                            "style": [
+                                0,
+                                0,
+                                0
+                            ]
+                        }
+                    ],
+                    "好啊",
+                ],
+                "from_uin": 2322423201,
+                "did": 2322423201,
+                "msg_id": 50873,
+                "msg_type": 0,
+                "send_uin": 3680220215,
+                "time": 1450687625,
+                "to_uin": 931996776
+            }
+        }
+    ],
+    "retcode": 0
+}
+```
+*这里有几点需要注意：
+> 服务端收到这个请求后，如果没有新消息，会一直保持住链接，所以遇到ReadTimeout异常是正常的
+> Web QQ 无法接受图片、@ 别人、自定义表情等消息，消息内容只有默认表情和文字
+> 如果消息内容为表情，`content [1]`的内容就不是`String`类型了，而是一个`JSONArray`类型，里面有表情的编号
+> 所以`content`的长度有可能大于 2，代表着消息的内容为文字和表情的混排，`content [1]`开始的每一位都是分割后的文字或表情
+> 这个请求有时候会返回`retcode`的值为`103`，此时需要登录 Smart QQ，确认能收到消息后点击设置-退出登录，就会恢复正常了
+> 在这里接受到的`uin`、`group_code`等并不是固定的，而是会改变的，所以不要长时间保存这些信息，
+
+
+**5.第六步 发送消息**
+* 发送信息给好友
+* 请求方式：`Post`
+* url：`http://d1.web2.qq.com/channel/send_buddy_msg2`
+* referer： `http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2`
+* 请求参数只有一个`r`，值是一个 `JSON`，内容为：
+```
+let options = {
+	to: user_id,
+	content: `[\"${send_nick}, ${answer}\",[\"font\",{\"name\":\"宋体\",\"size\":10,\"style\":[0,0,0],\"color\":\"000000\"}]]`,
+	face: 543,
+	clientid: 53999199,
+	msg_id:	parseInt( Math.random()*900000000 + 10000000),
+	psessionid: psessionid
+};
+```
+* `psessionid`是登录后获取的参数，`msg`是你需要发送的内容，`to`是用户编号，`msg_id`只要是一个比较大的数字即可，
+   `face`暂时不知道有什么用。
+* 这里有一点需要注意的是，`content`不是一个`jsonArrary`，只是一个`string`类型，而且对特殊符号都做了反斜杠处理，最后再对这一串参数转换成字符串再进行`encodeURIComponent`
+  如果不经过处理直接提交会返回1000001错误。
+* 如果发送成功，会返回如下数据：
+```
+{
+    "errCode": 0,
+    "msg": "send ok"
+}
+```
+* -------------------------------我是分界线-----------------------------------
+* 发送群消息
+* 请求方式：`Post`
+* url：`http://d1.web2.qq.com/channel/send_qun_msg2`
+* referer： `http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2`
+* 请求参数和上面几乎一样，只是将`to`替换成了`group_uin`：
+```
+let options = {
+	group_uin: group_uin,
+	content: `[\"${send_nick}, ${answer}\",[\"font\",{\"name\":\"宋体\",\"size\":10,\"style\":[0,0,0],\"color\":\"000000\"}]]`,
+	face: 543,
+	clientid: 53999199,
+	msg_id:	parseInt( Math.random()*900000000 + 10000000),
+	psessionid: psessionid
+};
+```
+* -------------------------------我是分界线-----------------------------------
+* 发送讨论组消息
+* 请求方式：Post
+* url：http://d1.web2.qq.com/channel/send_discu_msg2
+* referer：http://d1.web2.qq.com/proxy.html?v=20151105001&callback=1&id=2
+* 格式也是一样的，只是替换为了did：
+```
+let options = {
+	did: did,
+	content: `[\"${send_nick}, ${answer}\",[\"font\",{\"name\":\"宋体\",\"size\":10,\"style\":[0,0,0],\"color\":\"000000\"}]]`,
+	face: 543,
+	clientid: 53999199,
+	msg_id:	parseInt( Math.random()*900000000 + 10000000),
+	psessionid: psessionid
+};
+```
